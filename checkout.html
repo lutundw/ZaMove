@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Payment | ZamuMove</title><link rel="stylesheet" href="css/style.css"></head>
+<body data-p="checkout">
+<main id="main" class="wrap sec"><h1 style="font-size:2rem">Pay for your trip</h1><div class="two r"><div class="card"><div data-st="">
+<form id="pay"><fieldset style="border:0;padding:0"><legend><b>Payment method</b></legend><label><input type="radio" name="m" checked> MTN Mobile Money</label><label><input type="radio" name="m"> Airtel Money</label><label><input type="radio" name="m"> Visa or Mastercard</label></fieldset><label for="ph">Mobile number or card holder</label><input id="ph" class="in" required><label><input id="fail" type="checkbox"> Demo: simulate a failed payment</label><p><button class="btn o">Pay <span id="amt"></span></button></p><p class="mu">Payments are processed securely by our payment partner.</p></form></div>
+<div data-st="p" class="stt hid" role="status"><b>⏳</b>Waiting for your approval on your phone…</div><div data-st="s" class="stt hid" role="status"><b style="color:var(--g)">✓</b>Payment received. Opening your ticket…</div><div data-st="f" class="stt hid" role="alert"><b style="color:#b42318">✕</b>Payment failed. Your seats are held for 10 minutes.<p><button id="retry" class="btn">Try again</button></p></div></div>
+<aside class="card"><h3>Booking summary</h3><div id="sum"></div></aside></div></main>
+<script src="js/app.js"></script></body></html>
