@@ -1,4 +1,4 @@
-# ZamuMove frontend (demo)
+# Zamove frontend (demo)
 Open index.html in a browser. Plain HTML, CSS and vanilla JS; no build step.
 Flow: index > results > booking > checkout > ticket. Also: login (choose Passenger, Operator or Admin), bookings, cargo, operator, admin, 404.
 Mock data and all page logic live in js/app.js. Replace these with fetch() calls to the PHP API:

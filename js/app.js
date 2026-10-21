@@ -1,4 +1,4 @@
-/* ZamuMove demo frontend. Mock data below; swap for fetch('/api/...') when the PHP backend is ready. */
+/* Zamove demo frontend. Mock data below; swap for fetch('/api/...') when the PHP backend is ready. */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const K=n=>'K '+Number(n).toLocaleString('en-US');
 const TOWNS=['Lusaka','Kitwe','Ndola','Livingstone','Kabwe','Chipata','Solwezi'];
@@ -9,8 +9,8 @@ const TRIPS=[
 const S={get:(k,d)=>{try{return JSON.parse(sessionStorage.getItem(k))||d}catch(e){return d}},set:(k,v)=>{try{sessionStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const opts=(a,s)=>a.map(x=>`<option${x==s?' selected':''}>${x}</option>`).join('');
 function chrome(){const b=document.body,d=b.classList.contains('dash');
-if(!d){b.insertAdjacentHTML('afterbegin',`<header class="nav"><div class="wrap row"><a class="logo" href="index.html"><b>ZM</b>ZamuMove</a><nav class="row sp" aria-label="Main"><a href="index.html">Search</a><a href="bookings.html">My bookings</a><a href="cargo.html">Send cargo</a><a href="login.html">Log in</a><a class="btn s" href="login.html?r=1">Register</a></nav></div></header>`);
-b.insertAdjacentHTML('beforeend',`<footer class="foot"><div class="wrap row"><div><b>ZamuMove</b><br>Connecting Zambia, one journey at a time.</div><div class="sp">Help centre · Booking terms · Privacy<br>hello@zamumove.example · Demo design</div></div></footer>`)}
+if(!d){b.insertAdjacentHTML('afterbegin',`<header class="nav"><div class="wrap row"><a class="logo" href="index.html"><b>ZM</b>Zamove</a><nav class="row sp" aria-label="Main"><a href="index.html">Search</a><a href="bookings.html">My bookings</a><a href="cargo.html">Send cargo</a><a href="login.html">Log in</a><a class="btn s" href="login.html?r=1">Register</a></nav></div></header>`);
+b.insertAdjacentHTML('beforeend',`<footer class="foot"><div class="wrap row"><div><b>Zamove</b><br>Connecting Zambia, one journey at a time.</div><div class="sp">Help centre · Booking terms · Privacy<br>hello@zamove.example · Demo design</div></div></footer>`)}
 b.insertAdjacentHTML('afterbegin','<a class="skip" href="#main">Skip to content</a>')}
 function tabs(){$$('[data-tab]').forEach(t=>t.onclick=()=>{$$('[data-tab]').forEach(x=>x.setAttribute('aria-selected',x==t));$$('[data-panel]').forEach(p=>p.classList.toggle('hid',p.dataset.panel!=t.dataset.tab))})}
 const P={
