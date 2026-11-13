@@ -1,0 +1,4 @@
+# Send every /api/v1/... request that is not a real file to the router.
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]

@@ -1,0 +1,24 @@
+Target: https://localhost:8443/api/v1
+Specification: api/openapi/openapi.json (OpenAPI 3.1.0)
+Started: 2026-11-08 05:10:44 +0000
+========================================================================
+PASS 01  createUser     POST   /users                 -> 201  application/json; charset=utf-8 schema=UserCreated
+PASS 02  createUser     POST   /users                 -> 400  application/problem+json; charset=utf-8 schema=Problem
+PASS 03  createUser     POST   /users                 -> 409  application/problem+json; charset=utf-8 schema=ValidationProblem
+PASS 04  createUser     POST   /users                 -> 415  application/problem+json; charset=utf-8 schema=Problem
+PASS 05  createUser     POST   /users                 -> 422  application/problem+json; charset=utf-8 schema=ValidationProblem
+PASS 06  createUser     POST   /users                 -> 413  application/problem+json; charset=utf-8 schema=Problem
+PASS 07  login          POST   /sessions              -> 200  application/json; charset=utf-8 schema=LoginResponse
+PASS 08  login          POST   /sessions              -> 401  application/problem+json; charset=utf-8 schema=Problem
+PASS 09  login          POST   /sessions              -> 422  application/problem+json; charset=utf-8 schema=ValidationProblem
+PASS 10  getCurrentUser GET    /users/me              -> 200  application/json; charset=utf-8 schema=UserPublic
+PASS 11  getCurrentUser GET    /users/me              -> 401  application/problem+json; charset=utf-8 schema=Problem
+PASS 12  listBookings   GET    /bookings?limit=5      -> 200  application/json; charset=utf-8 schema=BookingList
+PASS 13  listBookings   GET    /bookings?admin=true   -> 400  application/problem+json; charset=utf-8 schema=Problem
+PASS 14  listBookings   GET    /bookings              -> 401  application/problem+json; charset=utf-8 schema=Problem
+PASS 15  logout         DELETE /sessions/current      -> 200  application/json; charset=utf-8 schema=Message
+PASS 16  getCurrentUser GET    /users/me              -> 401  application/problem+json; charset=utf-8 schema=Problem
+------------------------------------------------------------------------
+Documented responses exercised by this suite: 15 of 32
+Covered by the other scripts (rate limit, TLS, session tests) or by fault injection: createUser:403, createUser:429, createUser:500, getCurrentUser:429, getCurrentUser:500, login:400, login:403, login:413, login:415, login:429, login:500, logout:401, logout:403, logout:429, logout:500, listBookings:429, listBookings:500
+SUMMARY: 16 passed, 0 failed

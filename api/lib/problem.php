@@ -18,11 +18,15 @@ function problem_slug(int $status): string
 {
     return match ($status) {
         400 => 'bad-request',
+        401 => 'unauthorised',
+        403 => 'forbidden',
+        404 => 'not-found',
         405 => 'method-not-allowed',
         409 => 'conflict',
         413 => 'payload-too-large',
         415 => 'unsupported-media-type',
         422 => 'validation-error',
+        429 => 'too-many-requests',
         default => 'server-error',
     };
 }
@@ -31,9 +35,10 @@ function problem_slug(int $status): string
 function send_status(int $status): void
 {
     $phrases = [
-        200 => 'OK', 201 => 'Created', 400 => 'Bad Request', 405 => 'Method Not Allowed',
+        200 => 'OK', 201 => 'Created', 308 => 'Permanent Redirect', 400 => 'Bad Request',
+        401 => 'Unauthorised', 403 =>'Forbidden', 404 => 'Not-Found', 405 => 'Method Not Allowed',
         409 => 'Conflict', 413 => 'Payload Too Large', 415 => 'Unsupported Media Type',
-        422 => 'Unprocessable Entity', 500 => 'Internal Server Error',
+        422 => 'Unprocessable Entity', 429 => 'Too many Requests', 500 => 'Internal Server Error',
     ];
     $protocol = $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.1';
     header("$protocol $status " . ($phrases[$status] ?? 'Error'), true, $status);

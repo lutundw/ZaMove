@@ -1,6 +1,88 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Log in | Zamove</title><link rel="stylesheet" href="css/style.css"></head>
-<body data-p="login">
-<main id="main" class="wrap sec" style="max-width:480px"><h1 style="font-size:2rem">Welcome to Zamove</h1><div class="tabs"><button data-tab="in" aria-selected="true">Log in</button><button data-tab="reg" aria-selected="false">Register</button></div>
-<form class="card" data-panel="in"><label for="e1">Email</label><input id="e1" class="in" type="email" required><label for="p1">Password</label><input id="p1" class="in" type="password" required><label for="r1">Log in as</label><select id="r1" name="role" class="in"><option value="customer">Passenger</option><option value="operator">Bus operator</option><option value="admin">Admin</option></select><p><button class="btn" style="width:100%">Log in</button></p><a href="#">Forgot password?</a></form>
-<form class="card hid" data-panel="reg"><label for="r2">I am a</label><select id="r2" name="role" class="in"><option value="customer">Passenger</option><option value="operator">Bus operator</option></select><label for="n2">Full name or company</label><input id="n2" class="in" required><label for="e2">Email</label><input id="e2" class="in" type="email" required><label for="t2">Phone</label><input id="t2" class="in" type="tel" required><label for="p2">Password</label><input id="p2" class="in" type="password" minlength="8" required><p><button class="btn" style="width:100%">Create account</button></p><p class="mu">Bus operators are approved by an admin before they can sell tickets.</p></form></main>
-<script src="js/app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Log in | Zamove</title>
+    <link rel="stylesheet" href="css/style.css">
+  </head>
+
+  <body data-p="login">
+
+    <main id="main" class="wrap sec" style="max-width:480px">
+      <h1 style="font-size:2rem">Welcome to Zamove</h1>
+      
+      <div class="tabs">
+      
+        <button data-tab="in" aria-selected="true">Log in</button>
+        <button data-tab="reg" aria-selected="false">Register</button>
+      </div>
+
+      <form id= "login-form" class="card" data-panel="in" novalidate>
+        
+        <div id="login-status" class="alert hid" role="status" aria-live="polite"></div>
+
+        <label for="login-email">Email</label>
+        <input id="login-email" name="email" class="in" type="email" maxlength="150" autocomplete="username" inputmode="email" required aria-describedby="login-email-err">
+        <p id="login-email-err" class="err" aria-live="polite"></p>
+
+        <label for="login-password">Password</label>
+        <input id="login-password" name="password" class="in" type="password" maxlength="72" autocomplete="current-password" required aria-describedby="login-password-err">
+        <p id="login-password-err" clas="err" aria-live="polite"></p>
+        
+  
+          <p><button id="login-submit" class="login-submit btn" type="submit" class="btn" style="width:100%">Log in</button>
+          </p><a href="#">Forgot password?</a>
+        
+      </form>
+
+      <!-- Registration form (Lab 3): submitted with fetch() from js/register.js.
+      novalidate turns off the browser's own pop-up bubbles so our inline messages are used instead;
+      the server still validates everything (api/auth/register.php). -->
+
+     <form id="reg-form" class="card hid" data-panel="reg" novalidate>
+  
+        <div id="reg-status" class="alert hid" role="status" aria-live="polite"></div>
+    
+        <label for="reg-role">I am a</label>
+    
+        <select id="reg-role" name="role" class="in" required aria-describedby="reg-role-err">
+      
+          <option value="customer">Passenger</option>
+          <option value="operator">Bus operator</option>
+        </select>
+    
+        <p id="reg-role-err" class="err" aria-live="polite"></p>
+    
+        <label for="reg-full_name">Full name or company</label>
+        <input id="reg-full_name" name="full_name" class="in" type="text" maxlength="120" autocomplete="name" required aria-describedby="reg-full_name-err">
+        <p id="reg-full_name-err" class="err" aria-live="polite"></p>
+    
+        <label for="reg-email">Email</label>
+        <input id="reg-email" name="email" class="in" type="email" maxlength="150" autocomplete="email" inputmode="email" required aria-describedby="reg-email-err">
+        <p id="reg-email-err" class="err" aria-live="polite"></p>
+    
+        <label for="reg-phone">Phone</label>
+        <input id="reg-phone" name="phone" class="in" type="tel" maxlength="20" autocomplete="tel" inputmode="tel" placeholder="0971234567" required aria-describedby="reg-phone-err">
+        <p id="reg-phone-err" class="err" aria-live="polite"></p>
+    
+        <label for="reg-password">Password</label>
+        <input id="reg-password" name="password" class="in" type="password" maxlength="72" autocomplete="new-password" required aria-describedby="reg-password-hint reg-password-err">
+        <p id="reg-password-hint" class="mu" style="margin:4px 0 0">At least 8 characters with a lowercase letter, an uppercase letter and a number.</p>
+        <p id="reg-password-err" class="err" aria-live="polite"></p>
+
+        <p><button id="reg-submit" type="submit" class="btn" style="width:100%">Create account</button></p>
+    
+        <p class="mu">Bus operators are approved by an admin before they can sell tickets.</p>
+
+      </form>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/validation.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/register.js"></script>
+    <script src="js/app.js"></script>
+
+  </body>
+</html>

@@ -1,0 +1,362 @@
+Target: http://127.0.0.1:8099/api/auth/register.php
+Started: 2026-10-23 01:03:24 +0200
+========================================================================
+### TEST 01 - Valid payload is accepted (control)
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda@example.com","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+
+{
+    "message": "Account created. You can now log in.",
+    "user": {
+        "user_id": 1,
+        "full_name": "Mary Banda",
+        "email": "mary.banda@example.com",
+        "phone": "+260971234567",
+        "role": "customer",
+        "account_status": "active"
+    }
+}
+RESULT: PASS (expected 201, got 201)
+------------------------------------------------------------------------
+### TEST 02 - Empty JSON object - every required field missing
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "5 fields failed validation. Fix the listed fields and try again.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "role",
+            "code": "required",
+            "message": "Choose Passenger or Bus operator."
+        },
+        {
+            "field": "full_name",
+            "code": "required",
+            "message": "Enter your full name or company name."
+        },
+        {
+            "field": "email",
+            "code": "required",
+            "message": "Enter your email address."
+        },
+        {
+            "field": "phone",
+            "code": "required",
+            "message": "Enter your phone number."
+        },
+        {
+            "field": "password",
+            "code": "required",
+            "message": "Create a password."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 03 - Invalid email, phone, name length and weak password
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"A","email":"not-an-email","phone":"12345","password":"short"}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "4 fields failed validation. Fix the listed fields and try again.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "full_name",
+            "code": "min",
+            "message": "Name must be at least 2 characters."
+        },
+        {
+            "field": "email",
+            "code": "format",
+            "message": "Enter a valid email address, for example name@example.com."
+        },
+        {
+            "field": "phone",
+            "code": "pattern",
+            "message": "Enter a Zambian mobile number, for example 0971234567 or +260971234567."
+        },
+        {
+            "field": "password",
+            "code": "min",
+            "message": "Password must be at least 8 characters."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 04 - XSS attempt in full_name
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"<script>alert(1)</script>","email":"xss@example.com","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "1 field failed validation. Fix the listed fields and try again.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "full_name",
+            "code": "pattern",
+            "message": "Use letters, numbers, spaces and . ' & - only."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 05 - Markup is stripped and the phone number normalised (sanitisation)
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"<b>Jane</b> Phiri","email":"jane.phiri@example.com","phone":"+260 96 555 1234","password":"Passw0rdX"}'
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
+
+{
+    "message": "Account created. You can now log in.",
+    "user": {
+        "user_id": 2,
+        "full_name": "Jane Phiri",
+        "email": "jane.phiri@example.com",
+        "phone": "+260965551234",
+        "role": "customer",
+        "account_status": "active"
+    }
+}
+RESULT: PASS (expected 201, got 201)
+------------------------------------------------------------------------
+### TEST 06 - SQL injection strings in full_name and email
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"Robert'); DROP TABLE users;--","email":"' OR '1'='1","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "2 fields failed validation. Fix the listed fields and try again.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "full_name",
+            "code": "pattern",
+            "message": "Use letters, numbers, spaces and . ' & - only."
+        },
+        {
+            "field": "email",
+            "code": "format",
+            "message": "Enter a valid email address, for example name@example.com."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 07 - Privilege escalation: role=admin plus extra fields
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"admin","full_name":"Evil Admin","email":"evil@example.com","phone":"0971234567","password":"Passw0rdX","account_status":"active","is_admin":true}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "3 fields failed validation. Fix the listed fields and try again.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "account_status",
+            "code": "unexpected_field",
+            "message": "This field is not accepted."
+        },
+        {
+            "field": "is_admin",
+            "code": "unexpected_field",
+            "message": "This field is not accepted."
+        },
+        {
+            "field": "role",
+            "code": "enum",
+            "message": "Choose Passenger or Bus operator."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 08 - Wrong JSON types (object, array, numbers)
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"customer","full_name":{"first":"Mary"},"email":["a@b.com"],"phone":260971234567,"password":12345678}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "4 fields failed validation. Fix the listed fields and try again.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "full_name",
+            "code": "type",
+            "message": "Must be a text value."
+        },
+        {
+            "field": "email",
+            "code": "type",
+            "message": "Must be a text value."
+        },
+        {
+            "field": "phone",
+            "code": "type",
+            "message": "Must be a text value."
+        },
+        {
+            "field": "password",
+            "code": "type",
+            "message": "Must be a text value."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 09 - 83-byte password (over the 72-byte bcrypt limit)
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{... "password":"<83 characters>"}'
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "1 field failed validation. Fix the listed fields and try again.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "password",
+            "code": "max_bytes",
+            "message": "Password must be 72 bytes or fewer."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 10 - Malformed JSON
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"email": "a@b.com",'
+HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "The request body is not valid JSON.",
+    "instance": "/api/auth/register.php"
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 11 - Empty request body
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json'
+HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "The request body is empty.",
+    "instance": "/api/auth/register.php"
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 12 - JSON array instead of an object
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '[1,2,3]'
+HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "The request body must be a JSON object.",
+    "instance": "/api/auth/register.php"
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 13 - Form-encoded body instead of JSON
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -d 'email=a@b.com&password=x'
+HTTP/1.1 415 Unsupported Media Type
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/unsupported-media-type",
+    "title": "Unsupported Media Type",
+    "status": 415,
+    "detail": "Send the body as application/json.",
+    "instance": "/api/auth/register.php"
+}
+RESULT: PASS (expected 415, got 415)
+------------------------------------------------------------------------
+### TEST 14 - GET instead of POST
+$ curl -X GET http://127.0.0.1:8099/api/auth/register.php
+HTTP/1.1 405 Method Not Allowed
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/method-not-allowed",
+    "title": "Method Not Allowed",
+    "status": 405,
+    "detail": "This endpoint only accepts POST requests.",
+    "instance": "/api/auth/register.php"
+}
+RESULT: PASS (expected 405, got 405)
+------------------------------------------------------------------------
+### TEST 15 - Oversized body (12,000-character name)
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"full_name":"<12000 characters>", ...}'
+HTTP/1.1 413 Payload Too Large
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/payload-too-large",
+    "title": "Payload Too Large",
+    "status": 413,
+    "detail": "The request body must be 10240 bytes or fewer.",
+    "instance": "/api/auth/register.php"
+}
+RESULT: PASS (expected 413, got 413)
+------------------------------------------------------------------------
+### TEST 16 - Duplicate email (UNIQUE constraint -> 409, no SQL leaked)
+$ curl -X POST http://127.0.0.1:8099/api/auth/register.php -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda@example.com","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 409 Conflict
+Content-Type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/conflict",
+    "title": "Conflict",
+    "status": 409,
+    "detail": "An account with this email already exists.",
+    "instance": "/api/auth/register.php",
+    "errors": [
+        {
+            "field": "email",
+            "code": "already_registered",
+            "message": "This email is already registered. Try logging in instead."
+        }
+    ]
+}
+RESULT: PASS (expected 409, got 409)
+------------------------------------------------------------------------
+
+SUMMARY: 16 passed, 0 failed
+
+Rows stored in the users table (only tests 01 and 05 should appear):
+{"user_id":1,"full_name":"Mary Banda","email":"mary.banda@example.com","phone":"+260971234567","role":"customer","account_status":"active","hash_prefix":"$2y$10$","hash_len":60}
+{"user_id":2,"full_name":"Jane Phiri","email":"jane.phiri@example.com","phone":"+260965551234","role":"customer","account_status":"active","hash_prefix":"$2y$10$","hash_len":60}

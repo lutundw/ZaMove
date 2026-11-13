@@ -1,0 +1,51 @@
+Target: https://localhost:8443/api/v1
+Started: 2026-11-08 07:10:45 +0200
+========================================================================
+### CHECK 1 - TLS handshake negotiated with TLS 1.3 only
+$ curl -v --tlsv1.3 --cacert rootCA.pem https://localhost:8443/api/v1/users/me
+* ALPN: curl offers h2,http/1.1
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / RSASSA-PSS
+* ALPN: server accepted http/1.1
+* Server certificate:
+RESULT: PASS (connection uses TLSv1.3)
+------------------------------------------------------------------------
+RESULT: PASS (certificate chain verifies against the mkcert CA)
+------------------------------------------------------------------------
+### CHECK 2 - Certificate presented by the server
+$ openssl s_client -connect localhost:8443 -tls1_3 -servername localhost | openssl x509 -noout -subject -issuer -dates -ext subjectAltName
+Verification: OK
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Verify return code: 0 (ok)
+subject=O = mkcert development certificate, OU = root@vm
+issuer=O = mkcert development CA, OU = root@vm, CN = mkcert root@vm
+notBefore=Nov  7 20:28:36 2026 GMT
+notAfter=Feb  7 20:28:36 2029 GMT
+X509v3 Subject Alternative Name: 
+    DNS:localhost, IP Address:127.0.0.1, IP Address:0:0:0:0:0:0:0:1
+------------------------------------------------------------------------
+### CHECK 3 - A client limited to TLS 1.2 must be refused
+$ curl -v --tls-max 1.2 https://localhost:8443/api/v1/users/me
+* TLSv1.2 (OUT), TLS handshake, Client hello (1):
+* TLSv1.2 (IN), TLS alert, protocol version (582):
+* OpenSSL/3.0.13: error:0A00042E:SSL routines::tlsv1 alert protocol version
+curl exit code: 35
+RESULT: PASS (TLS 1.2 handshake is rejected)
+------------------------------------------------------------------------
+### CHECK 4 - HSTS header on an HTTPS response
+$ curl -sI https://localhost:8443/api/v1/users/me
+HTTP/1.1 405 Method Not Allowed
+x-content-type-options: nosniff
+cache-control: no-store
+content-security-policy: default-src 'none'; frame-ancestors 'none'
+strict-transport-security: max-age=31536000; includeSubDomains
+RESULT: PASS (Strict-Transport-Security: max-age >= 1 year)
+------------------------------------------------------------------------
+### CHECK 5 - Plain HTTP is upgraded to HTTPS
+$ curl -si http://localhost:8080/api/v1/users/me
+HTTP/1.1 308 Permanent Redirect
+Location: https://localhost:8443/api/v1/users/me
+RESULT: PASS (HTTP request answered with a 301/308 redirect)
+------------------------------------------------------------------------
+RESULT: PASS (redirect target is an https:// URL)
+------------------------------------------------------------------------
+SUMMARY: 6 passed, 0 failed

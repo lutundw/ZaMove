@@ -1,0 +1,298 @@
+Target: https://localhost:8443/api/v1
+Started: 2026-11-08 07:10:45 +0200
+========================================================================
+### TEST S00 - Create a test account
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{... "email":"session.test.1794114645@example.com" ...}'
+HTTP/1.1 201 Created
+content-type: application/json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 19
+ratelimit-reset: 15
+
+{
+    "message": "Account created. You can now log in.",
+    "user": {
+        "user_id": 3,
+        "full_name": "Session Tester",
+        "email": "session.test.1794114645@example.com",
+        "phone": "+260961234567",
+        "role": "customer",
+        "account_status": "active"
+    }
+}
+RESULT: PASS (expected 201, got 201)
+------------------------------------------------------------------------
+### TEST S01 - Login - inspect the Set-Cookie header
+$ curl -i -c jar -X POST https://localhost:8443/api/v1/sessions -H 'Content-Type: application/json' -d '{"email":"session.test.1794114645@example.com","password":"***"}'
+HTTP/1.1 200 OK
+x-content-type-options: nosniff
+cache-control: no-store
+referrer-policy: no-referrer
+content-security-policy: default-src 'none'; frame-ancestors 'none'
+strict-transport-security: max-age=31536000; includeSubDomains
+ratelimit-limit: 5
+ratelimit-remaining: 4
+ratelimit-reset: 15
+set-cookie: __Host-zamove_sid=bcf93e3e610a72238114acb34a3b0768455142152fe8e1ba35b8269026619278; expires=Sun, 08 Nov 2026 13:10:45 GMT; Max-Age=28800; path=/; secure; HttpOnly; SameSite=Strict
+content-type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+
+{
+    "message": "Logged in.",
+    "user": {
+        "user_id": 3,
+        "full_name": "Session Tester",
+        "email": "session.test.1794114645@example.com",
+        "phone": "+260961234567",
+        "role": "customer",
+        "account_status": "active"
+    },
+    "expires_at": "2026-11-08T13:10:45+00:00"
+}
+RESULT: PASS (expected 200, got 200)
+------------------------------------------------------------------------
+Cookie header checks:
+RESULT: PASS (Set-Cookie contains '__Host-zamove_sid=')
+------------------------------------------------------------------------
+RESULT: PASS (Set-Cookie contains 'HttpOnly')
+------------------------------------------------------------------------
+RESULT: PASS (Set-Cookie contains 'secure')
+------------------------------------------------------------------------
+RESULT: PASS (Set-Cookie contains 'SameSite=Strict')
+------------------------------------------------------------------------
+RESULT: PASS (Set-Cookie contains 'path=/')
+------------------------------------------------------------------------
+RESULT: PASS (Set-Cookie has no Domain attribute (host-only))
+------------------------------------------------------------------------
+RESULT: PASS (session id is NOT in the JSON body (only in the cookie))
+------------------------------------------------------------------------
+RESULT: PASS (session id is 64 hex characters (256 bits))
+------------------------------------------------------------------------
+Session store after login (only a hash of the id is stored):
+{"id_hash_prefix":"950b9b732b524e8b","hash_length":64,"user_id":1,"created_at":"2026-11-08 05:10:44","expires_at":"2026-11-08 13:10:44"}
+{"id_hash_prefix":"933f9cd71fc4dc02","hash_length":64,"user_id":3,"created_at":"2026-11-08 05:10:45","expires_at":"2026-11-08 13:10:45"}
+(2 row(s))
+------------------------------------------------------------------------
+### TEST S02 - Authenticated route with the cookie
+$ curl -b jar https://localhost:8443/api/v1/users/me
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 59
+ratelimit-reset: 15
+
+{
+    "user_id": 3,
+    "full_name": "Session Tester",
+    "email": "session.test.1794114645@example.com",
+    "phone": "+260961234567",
+    "role": "customer",
+    "account_status": "active"
+}
+RESULT: PASS (expected 200, got 200)
+------------------------------------------------------------------------
+### TEST S03 - Authenticated route WITHOUT a cookie
+$ curl https://localhost:8443/api/v1/users/me
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 58
+ratelimit-reset: 15
+www-authenticate: Cookie realm="zamove"
+
+{
+    "type": "https://zamove.example/problems/unauthorized",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Authentication is required. Log in and try again.",
+    "instance": "/api/v1/users/me"
+}
+RESULT: PASS (expected 401, got 401)
+------------------------------------------------------------------------
+### TEST S04 - Forged cookie (64 random hex characters)
+$ curl -H 'Cookie: __Host-zamove_sid=9afce6a51edc03d6d651cccefc6cee42ca5bdc246138841a6606b6545621359a' https://localhost:8443/api/v1/users/me
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 57
+ratelimit-reset: 15
+www-authenticate: Cookie realm="zamove"
+
+{
+    "type": "https://zamove.example/problems/unauthorized",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Authentication is required. Log in and try again.",
+    "instance": "/api/v1/users/me"
+}
+RESULT: PASS (expected 401, got 401)
+------------------------------------------------------------------------
+### TEST S05 - Malformed cookie value
+$ curl -H "Cookie: __Host-zamove_sid=' OR 1=1--" https://localhost:8443/api/v1/users/me
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 56
+ratelimit-reset: 15
+www-authenticate: Cookie realm="zamove"
+
+{
+    "type": "https://zamove.example/problems/unauthorized",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Authentication is required. Log in and try again.",
+    "instance": "/api/v1/users/me"
+}
+RESULT: PASS (expected 401, got 401)
+------------------------------------------------------------------------
+### TEST S06 - Logout - server revokes the session and expires the cookie
+$ curl -i -b jar -c jar -X DELETE https://localhost:8443/api/v1/sessions/current
+HTTP/1.1 200 OK
+x-content-type-options: nosniff
+cache-control: no-store
+referrer-policy: no-referrer
+content-security-policy: default-src 'none'; frame-ancestors 'none'
+strict-transport-security: max-age=31536000; includeSubDomains
+ratelimit-limit: 60
+ratelimit-remaining: 59
+ratelimit-reset: 15
+set-cookie: __Host-zamove_sid=deleted; expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0; path=/; secure; HttpOnly; SameSite=Strict
+content-type: application/json; charset=utf-8
+Transfer-Encoding: chunked
+
+{
+    "message": "Logged out. Your session has been revoked."
+}
+RESULT: PASS (expected 200, got 200)
+------------------------------------------------------------------------
+RESULT: PASS (Set-Cookie expires the cookie (date in 1970))
+------------------------------------------------------------------------
+Session store after logout:
+{"id_hash_prefix":"950b9b732b524e8b","user_id":1}
+(1 row(s))
+------------------------------------------------------------------------
+### TEST S07 - REPLAY the cookie captured BEFORE logout (an attacker who copied it)
+$ curl -b old-cookie-jar https://localhost:8443/api/v1/users/me
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 55
+ratelimit-reset: 15
+www-authenticate: Cookie realm="zamove"
+
+{
+    "type": "https://zamove.example/problems/unauthorized",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Authentication is required. Log in and try again.",
+    "instance": "/api/v1/users/me"
+}
+RESULT: PASS (expected 401, got 401)
+------------------------------------------------------------------------
+### TEST S08 - Log in again for the timeout tests
+$ curl -c jar -X POST https://localhost:8443/api/v1/sessions -H 'Content-Type: application/json' -d '{"email":"session.test.1794114645@example.com","password":"***"}'
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+ratelimit-limit: 5
+ratelimit-remaining: 3
+ratelimit-reset: 15
+
+{
+    "message": "Logged in.",
+    "user": {
+        "user_id": 3,
+        "full_name": "Session Tester",
+        "email": "session.test.1794114645@example.com",
+        "phone": "+260961234567",
+        "role": "customer",
+        "account_status": "active"
+    },
+    "expires_at": "2026-11-08T13:10:45+00:00"
+}
+RESULT: PASS (expected 200, got 200)
+------------------------------------------------------------------------
+Simulate an expired session (absolute timeout): set expires_at to the year 2000
+OK (2 row(s) affected)
+### TEST S09 - Request with the expired session
+$ curl -b jar https://localhost:8443/api/v1/users/me
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 54
+ratelimit-reset: 15
+www-authenticate: Cookie realm="zamove"
+
+{
+    "type": "https://zamove.example/problems/unauthorized",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Authentication is required. Log in and try again.",
+    "instance": "/api/v1/users/me"
+}
+RESULT: PASS (expected 401, got 401)
+------------------------------------------------------------------------
+Expired row is removed by the server:
+{"sessions_left":1}
+(1 row(s))
+------------------------------------------------------------------------
+### TEST S10 - Log in again for the idle test
+$ curl -c jar -X POST https://localhost:8443/api/v1/sessions -H 'Content-Type: application/json' -d '{"email":"session.test.1794114645@example.com","password":"***"}'
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+ratelimit-limit: 5
+ratelimit-remaining: 2
+ratelimit-reset: 15
+
+{
+    "message": "Logged in.",
+    "user": {
+        "user_id": 3,
+        "full_name": "Session Tester",
+        "email": "session.test.1794114645@example.com",
+        "phone": "+260961234567",
+        "role": "customer",
+        "account_status": "active"
+    },
+    "expires_at": "2026-11-08T13:10:45+00:00"
+}
+RESULT: PASS (expected 200, got 200)
+------------------------------------------------------------------------
+Simulate 45 minutes of inactivity (idle timeout is 30): set last_seen_at to 2026-11-08 04:25:45
+OK (1 row(s) affected)
+### TEST S11 - Request after the idle timeout
+$ curl -b jar https://localhost:8443/api/v1/users/me
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 53
+ratelimit-reset: 15
+www-authenticate: Cookie realm="zamove"
+
+{
+    "type": "https://zamove.example/problems/unauthorized",
+    "title": "Unauthorized",
+    "status": 401,
+    "detail": "Authentication is required. Log in and try again.",
+    "instance": "/api/v1/users/me"
+}
+RESULT: PASS (expected 401, got 401)
+------------------------------------------------------------------------
+### TEST S12 - Login attempt from a foreign Origin (CSRF defence in depth)
+$ curl -X POST https://localhost:8443/api/v1/sessions -H 'Origin: https://evil.example' -H 'Content-Type: application/json' -d '{...}'
+HTTP/1.1 403 Forbidden
+content-type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/forbidden",
+    "title": "Forbidden",
+    "status": 403,
+    "detail": "Cross-origin requests are not allowed.",
+    "instance": "/api/v1/sessions"
+}
+RESULT: PASS (expected 403, got 403)
+------------------------------------------------------------------------
+Password storage (never plain text):
+{"email":"session.test.1794114645@example.com","hash_prefix":"$2y$10$","hash_length":60}
+(1 row(s))
+------------------------------------------------------------------------
+SUMMARY: 22 passed, 0 failed

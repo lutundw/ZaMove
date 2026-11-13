@@ -1,0 +1,468 @@
+Target: https://localhost:8443/api/v1
+Started: 2026-11-08 07:10:43 +0200
+========================================================================
+### TEST 01 - Valid payload is accepted (control)
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda.1794114643@example.com","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 201 Created
+content-type: application/json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 19
+ratelimit-reset: 17
+
+{
+    "message": "Account created. You can now log in.",
+    "user": {
+        "user_id": 1,
+        "full_name": "Mary Banda",
+        "email": "mary.banda.1794114643@example.com",
+        "phone": "+260971234567",
+        "role": "customer",
+        "account_status": "active"
+    }
+}
+RESULT: PASS (expected 201, got 201)
+------------------------------------------------------------------------
+### TEST 02 - Empty JSON object - every required property missing
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{}'
+HTTP/1.1 422 Unprocessable Entity
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 18
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "The request body does not match the API schema.",
+    "instance": "/api/v1/users",
+    "errors": [
+        {
+            "field": "role",
+            "code": "required",
+            "message": "Choose Passenger or Bus operator."
+        },
+        {
+            "field": "full_name",
+            "code": "required",
+            "message": "Enter your full name or company name."
+        },
+        {
+            "field": "email",
+            "code": "required",
+            "message": "Enter your email address."
+        },
+        {
+            "field": "phone",
+            "code": "required",
+            "message": "Enter your phone number."
+        },
+        {
+            "field": "password",
+            "code": "required",
+            "message": "Choose a password."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 03 - Invalid email, phone, name length and weak password
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"A","email":"not-an-email","phone":"12345","password":"short"}'
+HTTP/1.1 422 Unprocessable Entity
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 17
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "The request body does not match the API schema.",
+    "instance": "/api/v1/users",
+    "errors": [
+        {
+            "field": "full_name",
+            "code": "minLength",
+            "message": "Name must be at least 2 characters."
+        },
+        {
+            "field": "email",
+            "code": "format",
+            "message": "Enter a valid email address, for example name@example.com."
+        },
+        {
+            "field": "phone",
+            "code": "pattern",
+            "message": "Enter a Zambian mobile number, for example 0971234567 or +260971234567."
+        },
+        {
+            "field": "password",
+            "code": "minLength",
+            "message": "Password must be at least 8 characters."
+        },
+        {
+            "field": "password",
+            "code": "pattern",
+            "message": "Password needs a lowercase letter, an uppercase letter and a number."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 04 - additionalProperties:false - unknown fields and role 'admin' (privilege escalation)
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"admin","full_name":"Eve Hacker","email":"eve@example.com","phone":"0971234567","password":"Passw0rdX","account_status":"active","is_admin":true}'
+HTTP/1.1 422 Unprocessable Entity
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 16
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "The request body does not match the API schema.",
+    "instance": "/api/v1/users",
+    "errors": [
+        {
+            "field": "role",
+            "code": "enum",
+            "message": "Choose Passenger or Bus operator."
+        },
+        {
+            "field": "account_status",
+            "code": "additionalProperties",
+            "message": "Unknown field. Only the fields in the API contract are accepted."
+        },
+        {
+            "field": "is_admin",
+            "code": "additionalProperties",
+            "message": "Unknown field. Only the fields in the API contract are accepted."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 05 - Wrong JSON types (number, array, boolean, null)
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":12345,"email":["a@b.com"],"phone":true,"password":null}'
+HTTP/1.1 422 Unprocessable Entity
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 15
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "The request body does not match the API schema.",
+    "instance": "/api/v1/users",
+    "errors": [
+        {
+            "field": "full_name",
+            "code": "type",
+            "message": "Enter your full name or company name."
+        },
+        {
+            "field": "email",
+            "code": "type",
+            "message": "Enter your email address."
+        },
+        {
+            "field": "phone",
+            "code": "type",
+            "message": "Enter your phone number."
+        },
+        {
+            "field": "password",
+            "code": "type",
+            "message": "Choose a password."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 06 - XSS attempt in full_name
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"<script>alert(1)</script>","email":"xss@example.com","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 422 Unprocessable Entity
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 14
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/validation-error",
+    "title": "Validation failed",
+    "status": 422,
+    "detail": "The request body does not match the API schema.",
+    "instance": "/api/v1/users",
+    "errors": [
+        {
+            "field": "full_name",
+            "code": "pattern",
+            "message": "Use letters, numbers, spaces and . ' & - only."
+        }
+    ]
+}
+RESULT: PASS (expected 422, got 422)
+------------------------------------------------------------------------
+### TEST 07 - Malformed JSON (unclosed brace)
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer",'
+HTTP/1.1 400 Bad Request
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 13
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "The request body is not valid JSON.",
+    "instance": "/api/v1/users"
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 08 - Body is a JSON array, not an object
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '[1,2,3]'
+HTTP/1.1 400 Bad Request
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 12
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "The request body must be a JSON object.",
+    "instance": "/api/v1/users"
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 09 - Empty body
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' --data-binary ''
+HTTP/1.1 400 Bad Request
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 11
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "The request body is empty.",
+    "instance": "/api/v1/users"
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 10 - Wrong Content-Type (text/plain)
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: text/plain' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda.1794114643@example.com","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 415 Unsupported Media Type
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 10
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/unsupported-media-type",
+    "title": "Unsupported Media Type",
+    "status": 415,
+    "detail": "Send the body as application/json.",
+    "instance": "/api/v1/users"
+}
+RESULT: PASS (expected 415, got 415)
+------------------------------------------------------------------------
+### TEST 11 - Body over 10 KB
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"<11000 x a>"}'
+HTTP/1.1 413 Payload Too Large
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 9
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/payload-too-large",
+    "title": "Payload Too Large",
+    "status": 413,
+    "detail": "The request body must be 10240 bytes or fewer.",
+    "instance": "/api/v1/users"
+}
+RESULT: PASS (expected 413, got 413)
+------------------------------------------------------------------------
+### TEST 12 - Duplicate e-mail (database UNIQUE -> 409)
+$ curl -X POST https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda.1794114643@example.com","phone":"0971234567","password":"Passw0rdX"}'
+HTTP/1.1 409 Conflict
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 20
+ratelimit-remaining: 8
+ratelimit-reset: 17
+
+{
+    "type": "https://zamove.example/problems/conflict",
+    "title": "Conflict",
+    "status": 409,
+    "detail": "An account with this email already exists.",
+    "instance": "/api/v1/users",
+    "errors": [
+        {
+            "field": "email",
+            "code": "already_registered",
+            "message": "This email is already registered. Try logging in instead."
+        }
+    ]
+}
+RESULT: PASS (expected 409, got 409)
+------------------------------------------------------------------------
+### TEST 13 - Log in (sets the session cookie)
+$ curl -c jar -X POST https://localhost:8443/api/v1/sessions -H 'Content-Type: application/json' -d '{"email":"mary.banda.1794114643@example.com","password":"Passw0rdX"}'
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+ratelimit-limit: 5
+ratelimit-remaining: 4
+ratelimit-reset: 17
+
+{
+    "message": "Logged in.",
+    "user": {
+        "user_id": 1,
+        "full_name": "Mary Banda",
+        "email": "mary.banda.1794114643@example.com",
+        "phone": "+260971234567",
+        "role": "customer",
+        "account_status": "active"
+    },
+    "expires_at": "2026-11-08T13:10:44+00:00"
+}
+RESULT: PASS (expected 200, got 200)
+------------------------------------------------------------------------
+### TEST 14 - GET /bookings - unexpected query parameter is rejected
+$ curl -b jar 'https://localhost:8443/api/v1/bookings?admin=true'
+HTTP/1.1 400 Bad Request
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 59
+ratelimit-reset: 16
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "Unexpected query parameter(s): admin.",
+    "instance": "/api/v1/bookings",
+    "errors": [
+        {
+            "field": "admin",
+            "code": "unknownParameter",
+            "message": "This query parameter is not part of the API contract."
+        }
+    ]
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 15 - GET /bookings - limit above the contract maximum (100)
+$ curl -b jar 'https://localhost:8443/api/v1/bookings?limit=500'
+HTTP/1.1 400 Bad Request
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 58
+ratelimit-reset: 16
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "Query parameter 'limit' is invalid.",
+    "instance": "/api/v1/bookings",
+    "errors": [
+        {
+            "field": "limit",
+            "code": "maximum",
+            "message": "Number must be lower than or equal to 100"
+        }
+    ]
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 16 - GET /bookings - SQL injection in a query parameter
+$ curl -b jar "https://localhost:8443/api/v1/bookings?status=pending'%20OR%20'1'='1"
+HTTP/1.1 400 Bad Request
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 57
+ratelimit-reset: 16
+
+{
+    "type": "https://zamove.example/problems/bad-request",
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "Query parameter 'status' is invalid.",
+    "instance": "/api/v1/bookings",
+    "errors": [
+        {
+            "field": "status",
+            "code": "enum",
+            "message": "The data should match one item from enum"
+        }
+    ]
+}
+RESULT: PASS (expected 400, got 400)
+------------------------------------------------------------------------
+### TEST 17 - GET /bookings - valid request
+$ curl -b jar 'https://localhost:8443/api/v1/bookings?status=pending&limit=10'
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+ratelimit-limit: 60
+ratelimit-remaining: 56
+ratelimit-reset: 16
+
+{
+    "data": [
+        {
+            "booking_id": 1,
+            "booking_reference": "ZM-20261107-0001",
+            "booking_type": "passenger",
+            "booking_status": "pending",
+            "total_amount": 520,
+            "currency": "ZMW",
+            "created_at": "2026-11-08 05:10:41"
+        }
+    ],
+    "total": 1,
+    "limit": 10,
+    "offset": 0
+}
+RESULT: PASS (expected 200, got 200)
+------------------------------------------------------------------------
+### TEST 18 - Unknown path
+$ curl https://localhost:8443/api/v1/orders
+HTTP/1.1 404 Not Found
+content-type: application/problem+json; charset=utf-8
+
+{
+    "type": "https://zamove.example/problems/not-found",
+    "title": "Not Found",
+    "status": 404,
+    "detail": "No such endpoint. See /api-docs for the API contract.",
+    "instance": "/api/v1/orders"
+}
+RESULT: PASS (expected 404, got 404)
+------------------------------------------------------------------------
+### TEST 19 - Method not described in the contract (PUT /users)
+$ curl -X PUT https://localhost:8443/api/v1/users -H 'Content-Type: application/json' -d '{}'
+HTTP/1.1 405 Method Not Allowed
+content-type: application/problem+json; charset=utf-8
+allow: POST
+
+{
+    "type": "https://zamove.example/problems/method-not-allowed",
+    "title": "Method Not Allowed",
+    "status": 405,
+    "detail": "This endpoint accepts: POST.",
+    "instance": "/api/v1/users"
+}
+RESULT: PASS (expected 405, got 405)
+------------------------------------------------------------------------
+SUMMARY: 19 passed, 0 failed

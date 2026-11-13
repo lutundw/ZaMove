@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cookie security check | Zamove</title><link rel="stylesheet" href="css/style.css"></head>
+<body>
+<main class="wrap sec" style="max-width:760px">
+  <h1 style="font-size:1.8rem">Session cookie security check (Lab 5, Task 4.1)</h1>
+  <p class="mu">Log in first, then open this page. It runs the kind of script an attacker would inject through an XSS hole
+     and shows what that script can and cannot see. Delete this page before a real deployment.</p>
+  <div class="card"><b>1. <code>document.cookie</code></b>
+    <pre id="r-cookie">running…</pre></div>
+  <div class="card"><b>2. <code>cookieStore.get('__Host-zamove_sid')</code> (modern Cookie Store API)</b>
+    <pre id="r-store">running…</pre></div>
+  <div class="card"><b>3. Cookie value searched in <code>localStorage</code> / <code>sessionStorage</code></b>
+    <pre id="r-storage">running…</pre></div>
+  <div class="card"><b>4. The browser still sends the cookie by itself: <code>GET api/v1/users/me</code></b>
+    <pre id="r-me">running…</pre></div>
+  <p id="verdict" class="alert hid" role="status"></p>
+</main>
+<script src="js/security-check.js"></script>
+</body></html>

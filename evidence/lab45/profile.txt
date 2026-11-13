@@ -1,0 +1,19 @@
+Target: https://localhost:8443/api/v1   samples per row: 30
+Started: 2026-11-08 07:10:45 +0200
+========================================================================
+### TABLE A - TLS 1.3 handshake (a brand-new connection for every sample, milliseconds)
+Phase                                           mean  median     p95     max
+TCP connect                                      0.1     0.1     0.1     0.1
+TLS 1.3 handshake (after TCP connect)            3.0     3.0     4.0     4.0
+Whole request incl. handshake (401 reply)        6.0     5.9     7.8     8.3
+------------------------------------------------------------------------
+### TABLE B - API response time by request type (milliseconds, whole request over HTTPS)
+Request                                         mean  median     p95     max
+GET  /users/me without cookie (rejected)         6.8     6.1     9.2    19.7   (HTTP 401)
+POST /users with invalid body (schema)           8.1     7.7    11.5    12.2   (HTTP 422)
+POST /users with malformed JSON                  6.5     6.2     8.8     9.4   (HTTP 400)
+POST /sessions wrong password (bcrypt)          69.4    68.7    76.0    77.5   (HTTP 401)
+POST /sessions correct password (bcrypt)        70.5    69.5    76.8    80.0   (HTTP 200)
+GET  /bookings with a valid session              7.6     7.1    10.2    11.0   (HTTP 200)
+------------------------------------------------------------------------
+SUMMARY: profiling finished
