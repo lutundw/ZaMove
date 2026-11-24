@@ -1,0 +1,260 @@
+[
+  {
+    "file": "assets/route-booking.296b8bec.js",
+    "raw": 1974,
+    "gzip": 1055,
+    "br": 872
+  },
+  {
+    "file": "assets/route-bookings.1841b53b.js",
+    "raw": 1504,
+    "gzip": 777,
+    "br": 636
+  },
+  {
+    "file": "assets/route-cargo.b6dbdd50.js",
+    "raw": 233,
+    "gzip": 204,
+    "br": 182
+  },
+  {
+    "file": "assets/route-checkout.172d3cc9.js",
+    "raw": 2134,
+    "gzip": 1092,
+    "br": 901
+  },
+  {
+    "file": "assets/route-dash.ca94ca1e.js",
+    "raw": 6807,
+    "gzip": 2309,
+    "br": 1999
+  },
+  {
+    "file": "assets/route-login.d2917925.js",
+    "raw": 408,
+    "gzip": 303,
+    "br": 242
+  },
+  {
+    "file": "assets/route-ticket.d7a1360c.js",
+    "raw": 1285,
+    "gzip": 702,
+    "br": 571
+  },
+  {
+    "file": "assets/api.8388987e.js",
+    "raw": 2413,
+    "gzip": 1117,
+    "br": 927
+  },
+  {
+    "file": "assets/app.fd296633.js",
+    "raw": 6366,
+    "gzip": 2848,
+    "br": 2463
+  },
+  {
+    "file": "assets/guard.29ddd76c.js",
+    "raw": 1760,
+    "gzip": 832,
+    "br": 653
+  },
+  {
+    "file": "assets/login.ed81b048.js",
+    "raw": 2537,
+    "gzip": 1133,
+    "br": 924
+  },
+  {
+    "file": "assets/realtime.5c97efc6.js",
+    "raw": 6522,
+    "gzip": 2412,
+    "br": 2081
+  },
+  {
+    "file": "assets/register.180cd835.js",
+    "raw": 5829,
+    "gzip": 2130,
+    "br": 1776
+  },
+  {
+    "file": "assets/safe.6eed0ba8.js",
+    "raw": 2563,
+    "gzip": 1187,
+    "br": 1002
+  },
+  {
+    "file": "assets/security-check.4835d8ee.js",
+    "raw": 2210,
+    "gzip": 1006,
+    "br": 826
+  },
+  {
+    "file": "assets/validation.980e8dac.js",
+    "raw": 2901,
+    "gzip": 1041,
+    "br": 880
+  },
+  {
+    "file": "assets/site.57028804.css",
+    "raw": 7329,
+    "gzip": 2449,
+    "br": 2132
+  },
+  {
+    "file": "assets/img/dest-kitwe-1200.4a1569ab.avif",
+    "raw": 32895,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-kitwe-1200.5de72d47.webp",
+    "raw": 71338,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-kitwe-480.f7b378cb.avif",
+    "raw": 2910,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-kitwe-480.477c7492.webp",
+    "raw": 3586,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-kitwe-960.1cd3d0fb.avif",
+    "raw": 15696,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-kitwe-960.c636a271.webp",
+    "raw": 19144,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-livingstone-1200.e19501d2.avif",
+    "raw": 33055,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-livingstone-1200.3005e1bb.webp",
+    "raw": 71024,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-livingstone-480.2c54f9d9.avif",
+    "raw": 2987,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-livingstone-480.9f0d7f57.webp",
+    "raw": 3506,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-livingstone-960.3a8ba6e5.avif",
+    "raw": 15728,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-livingstone-960.e43081c1.webp",
+    "raw": 22492,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-ndola-1200.8f08f9d7.avif",
+    "raw": 32767,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-ndola-1200.ba8d62d8.webp",
+    "raw": 70964,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-ndola-480.676a46ea.avif",
+    "raw": 2905,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-ndola-480.9c4fde12.webp",
+    "raw": 3488,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-ndola-960.1d46556a.avif",
+    "raw": 15665,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/dest-ndola-960.61be7956.webp",
+    "raw": 22842,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-1600.0cf8a426.avif",
+    "raw": 22883,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-1600.db3ecdd5.webp",
+    "raw": 22374,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-2400.4efcf46e.avif",
+    "raw": 92538,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-2400.424fdf04.webp",
+    "raw": 208428,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-480.fbd2a654.avif",
+    "raw": 2476,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-480.3ddb7fc0.webp",
+    "raw": 3060,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-960.0c1a4a1e.avif",
+    "raw": 5144,
+    "gzip": null,
+    "br": null
+  },
+  {
+    "file": "assets/img/hero-960.9683f7b1.webp",
+    "raw": 7210,
+    "gzip": null,
+    "br": null
+  }
+]

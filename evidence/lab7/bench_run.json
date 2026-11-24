@@ -1,0 +1,37 @@
+{
+    "Q1 schedule search (origin + destination + date window, soonest first)": {
+        "median": 31.4442,
+        "p95": 66.8862,
+        "mean": 34.93733000000001,
+        "min": 9.3659,
+        "max": 89.17
+    },
+    "Q2 my bookings (customer + status, newest first)": {
+        "median": 7.6433,
+        "p95": 12.5364,
+        "mean": 8.375573333333332,
+        "min": 5.6611,
+        "max": 12.6924
+    },
+    "Q3 booking lookup by reference (UNIQUE key exists in both runs)": {
+        "median": 0.9643,
+        "p95": 1.9155,
+        "mean": 1.0385933333333335,
+        "min": 0.5252,
+        "max": 2.0435
+    },
+    "Q4 bookings of one departure, counted per status (FK schedule_id)": {
+        "median": 0.8739,
+        "p95": 1.5085,
+        "mean": 0.9471933333333332,
+        "min": 0.5939,
+        "max": 1.5449
+    },
+    "Q5 join: bookings per departure of one route (schedules -> bookings)": {
+        "median": 194.1242,
+        "p95": 218.0885,
+        "mean": 189.46408000000005,
+        "min": 142.5051,
+        "max": 220.1585
+    }
+}

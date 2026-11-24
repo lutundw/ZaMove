@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Test Trip</title></head>
+<body>
+<h2>Create Trip — Euro Bus</h2>
+<p>You must be logged in on this same browser (you are).</p>
+<input id="route" type="number" value="1" placeholder="route_id">
+<input id="vehicle" type="number" value="1" placeholder="vehicle_id"><br><br>
+Departure: <input id="dep" type="datetime-local"><br><br>
+Arrival: <input id="arr" type="datetime-local"><br><br>
+<input id="fare" type="number" value="150" placeholder="fare_per_seat">
+<input id="seats" type="number" value="15" placeholder="total_seats"><br><br>
+<button id="createBtn">Create Trip</button>
+<p id="msg"></p>
+<script>
+document.getElementById('createBtn').onclick = async () => {
+  let body = {
+    route_id: Number(document.getElementById('route').value),
+    vehicle_id: Number(document.getElementById('vehicle').value),
+    departure_time: document.getElementById('dep').value + ":00.000Z",
+    arrival_time: document.getElementById('arr').value + ":00.000Z",
+    fare_per_seat: Number(document.getElementById('fare').value),
+    total_seats: Number(document.getElementById('seats').value)
+  };
+  let r = await fetch("/zamove/api/v1/schedules", {
+    method: "POST",
+    credentials: "include",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(body)
+  });
+  let t = await r.text();
+  document.getElementById('msg').textContent = r.ok ? "SUCCESS! " + t : "API " + r.status + ": " + t;
+};
+</script>
+</body></html>

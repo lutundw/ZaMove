@@ -1,0 +1,77 @@
+/*
+ * Small client for the ZaMove API (api/v1), written against api/openapi/openapi.json.
+ *
+ *   ZamoveApi.request('POST', 'sessions', { email, password })
+ *     -> Promise<{ status, data, headers }>   on 2xx
+ *     -> rejects with ApiError                otherwise
+ *
+ * ApiError has: status (0 = network/timeout), problem (the RFC 7807 body),
+ *   message (problem.detail), fieldErrors ({ field: message }), retryAfter (seconds, on 429).
+ *
+ * A 401 on any call except login sends the user to login.html (session missing or expired).
+ * Server text is never inserted as HTML by callers (use textContent).
+ */
+(function () {
+  'use strict';
+
+  var BASE = 'api/v1/';
+  var TIMEOUT_MS = 15000;
+
+  function ApiError(status, problem, extra) {
+    this.name = 'ApiError';
+    this.status = status;
+    this.problem = problem || null;
+    this.message = (problem && problem.detail) || 'Request failed (' + status + ').';
+    this.fieldErrors = {};
+    this.retryAfter = null;
+    this.network = false;
+    this.timeout = false;
+    if (problem && Array.isArray(problem.errors)) {
+      problem.errors.forEach(function (e) {
+        if (e && e.field && !this.fieldErrors[e.field]) this.fieldErrors[e.field] = String(e.message || 'Invalid value.');
+      }, this);
+    }
+    if (extra) for (var k in extra) this[k] = extra[k];
+  }
+  ApiError.prototype = Object.create(Error.prototype);
+  ApiError.prototype.constructor = ApiError;
+
+  function redirectToLogin() {
+    var here = (location.pathname.split('/').pop() || 'index.html') + location.search;   // REAL APP: keep ?trip=1&pax=2 through the login
+    location.replace('login.html?expired=1&next=' + encodeURIComponent(here));
+  }
+
+  function request(method, path, body, opts) {
+    opts = opts || {};
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, TIMEOUT_MS);
+    var headers = { 'Accept': 'application/json, application/problem+json' };
+    var init = { method: method, headers: headers, credentials: 'same-origin', signal: controller.signal };
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+      init.body = JSON.stringify(body);
+    }
+
+    return fetch(BASE + path, init)
+      .then(function (res) {
+        var isJson = (res.headers.get('Content-Type') || '').indexOf('json') !== -1;
+        return (isJson ? res.json() : Promise.resolve(null))
+          .catch(function () { return null; })
+          .then(function (payload) { return { res: res, payload: payload }; });
+      }, function (err) {
+        throw new ApiError(0, null, { network: true, timeout: !!(err && err.name === 'AbortError'),
+          message: err && err.name === 'AbortError' ? 'The server took too long to answer.' : 'Could not reach the server.' });
+      })
+      .then(function (r) {
+        if (r.res.ok) return { status: r.res.status, data: r.payload, headers: r.res.headers };
+        var extra = {};
+        var ra = parseInt(r.res.headers.get('Retry-After'), 10);
+        if (!isNaN(ra)) extra.retryAfter = ra;
+        if (r.res.status === 401 && !opts.noRedirect401) redirectToLogin();
+        throw new ApiError(r.res.status, r.payload, extra);
+      })
+      .then(function (v) { clearTimeout(timer); return v; }, function (e) { clearTimeout(timer); throw e; });
+  }
+
+  window.ZamoveApi = { request: request, ApiError: ApiError, redirectToLogin: redirectToLogin };
+})();

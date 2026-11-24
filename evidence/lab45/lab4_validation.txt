@@ -1,0 +1,118 @@
+Target: https://localhost/api/v1
+Started: 2026-11-19 14:17:36 +0200
+========================================================================
+### TEST 01 - Valid payload is accepted (control)
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda.1795090656@example.com","phone":"0971234567","password":"Passw0rdX"}'
+
+
+RESULT: FAIL (expected 201, got ; )
+------------------------------------------------------------------------
+### TEST 02 - Empty JSON object - every required property missing
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{}'
+
+
+RESULT: FAIL (expected 422, got ; )
+------------------------------------------------------------------------
+### TEST 03 - Invalid email, phone, name length and weak password
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"A","email":"not-an-email","phone":"12345","password":"short"}'
+
+
+RESULT: FAIL (expected 422, got ; )
+------------------------------------------------------------------------
+### TEST 04 - additionalProperties:false - unknown fields and role 'admin' (privilege escalation)
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"admin","full_name":"Eve Hacker","email":"eve@example.com","phone":"0971234567","password":"Passw0rdX","account_status":"active","is_admin":true}'
+
+
+RESULT: FAIL (expected 422, got ; )
+------------------------------------------------------------------------
+### TEST 05 - Wrong JSON types (number, array, boolean, null)
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":12345,"email":["a@b.com"],"phone":true,"password":null}'
+
+
+RESULT: FAIL (expected 422, got ; )
+------------------------------------------------------------------------
+### TEST 06 - XSS attempt in full_name
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"<script>alert(1)</script>","email":"xss@example.com","phone":"0971234567","password":"Passw0rdX"}'
+
+
+RESULT: FAIL (expected 422, got ; )
+------------------------------------------------------------------------
+### TEST 07 - Malformed JSON (unclosed brace)
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer",'
+
+
+RESULT: FAIL (expected 400, got ; )
+------------------------------------------------------------------------
+### TEST 08 - Body is a JSON array, not an object
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '[1,2,3]'
+
+
+RESULT: FAIL (expected 400, got ; )
+------------------------------------------------------------------------
+### TEST 09 - Empty body
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' --data-binary ''
+
+
+RESULT: FAIL (expected 400, got ; )
+------------------------------------------------------------------------
+### TEST 10 - Wrong Content-Type (text/plain)
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: text/plain' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda.1795090656@example.com","phone":"0971234567","password":"Passw0rdX"}'
+
+
+RESULT: FAIL (expected 415, got ; )
+------------------------------------------------------------------------
+### TEST 11 - Body over 10 KB
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"<11000 x a>"}'
+
+
+RESULT: FAIL (expected 413, got ; )
+------------------------------------------------------------------------
+### TEST 12 - Duplicate e-mail (database UNIQUE -> 409)
+$ curl -X POST https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{"role":"customer","full_name":"Mary Banda","email":"mary.banda.1795090656@example.com","phone":"0971234567","password":"Passw0rdX"}'
+
+
+RESULT: FAIL (expected 409, got ; )
+------------------------------------------------------------------------
+### TEST 13 - Log in (sets the session cookie)
+$ curl -c jar -X POST https://localhost/api/v1/sessions -H 'Content-Type: application/json' -d '{"email":"mary.banda.1795090656@example.com","password":"Passw0rdX"}'
+
+
+RESULT: FAIL (expected 200, got ; )
+------------------------------------------------------------------------
+### TEST 14 - GET /bookings - unexpected query parameter is rejected
+$ curl -b jar 'https://localhost/api/v1/bookings?admin=true'
+
+
+RESULT: FAIL (expected 400, got ; )
+------------------------------------------------------------------------
+### TEST 15 - GET /bookings - limit above the contract maximum (100)
+$ curl -b jar 'https://localhost/api/v1/bookings?limit=500'
+
+
+RESULT: FAIL (expected 400, got ; )
+------------------------------------------------------------------------
+### TEST 16 - GET /bookings - SQL injection in a query parameter
+$ curl -b jar "https://localhost/api/v1/bookings?status=pending'%20OR%20'1'='1"
+
+
+RESULT: FAIL (expected 400, got ; )
+------------------------------------------------------------------------
+### TEST 17 - GET /bookings - valid request
+$ curl -b jar 'https://localhost/api/v1/bookings?status=pending&limit=10'
+
+
+RESULT: FAIL (expected 200, got ; )
+------------------------------------------------------------------------
+### TEST 18 - Unknown path
+$ curl https://localhost/api/v1/orders
+
+
+RESULT: FAIL (expected 404, got ; )
+------------------------------------------------------------------------
+### TEST 19 - Method not described in the contract (PUT /users)
+$ curl -X PUT https://localhost/api/v1/users -H 'Content-Type: application/json' -d '{}'
+
+
+RESULT: FAIL (expected 405, got ; )
+------------------------------------------------------------------------
+SUMMARY: 0 passed, 19 failed

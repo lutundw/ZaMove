@@ -1,0 +1,38 @@
+Target: https://localhost:8443/api/v1/sessions   (limit: 5 per 60 s)
+Started: 2026-11-08 07:10:44 +0200
+========================================================================
+attempt 1 -> HTTP 401   ratelimit-limit: 5 ratelimit-remaining: 4 ratelimit-reset: 16 
+attempt 2 -> HTTP 401   ratelimit-limit: 5 ratelimit-remaining: 3 ratelimit-reset: 16 
+attempt 3 -> HTTP 401   ratelimit-limit: 5 ratelimit-remaining: 2 ratelimit-reset: 16 
+attempt 4 -> HTTP 401   ratelimit-limit: 5 ratelimit-remaining: 1 ratelimit-reset: 16 
+attempt 5 -> HTTP 401   ratelimit-limit: 5 ratelimit-remaining: 0 ratelimit-reset: 16 
+attempt 6 -> HTTP 429   ratelimit-limit: 5 ratelimit-remaining: 0 ratelimit-reset: 15 retry-after: 15 
+attempt 7 -> HTTP 429   ratelimit-limit: 5 ratelimit-remaining: 0 ratelimit-reset: 15 retry-after: 15 
+attempt 8 -> HTTP 429   ratelimit-limit: 5 ratelimit-remaining: 0 ratelimit-reset: 15 retry-after: 15 
+------------------------------------------------------------------------
+### TEST 09 - The 9th attempt: full 429 response
+$ curl -i -X POST https://localhost:8443/api/v1/sessions -H 'Content-Type: application/json' -d '{"email":"nobody@example.com","password":"WrongPass1"}'
+HTTP/1.1 429 Too Many Requests
+content-type: application/problem+json; charset=utf-8
+ratelimit-limit: 5
+ratelimit-remaining: 0
+ratelimit-reset: 15
+retry-after: 15
+
+{
+    "type": "https://zamove.example/problems/too-many-requests",
+    "title": "Too Many Requests",
+    "status": 429,
+    "detail": "Rate limit of 5 requests per 60 seconds exceeded. Try again in 15 seconds.",
+    "instance": "/api/v1/sessions",
+    "retry_after": 15
+}
+RESULT: PASS (expected 429, got 429)
+------------------------------------------------------------------------
+RESULT: PASS (attempts 1-5 answered 401, attempts 6-8 answered 429)
+------------------------------------------------------------------------
+RESULT: PASS (429 carries a Retry-After header)
+------------------------------------------------------------------------
+RESULT: PASS (RateLimit-Remaining is 0)
+------------------------------------------------------------------------
+SUMMARY: 4 passed, 0 failed

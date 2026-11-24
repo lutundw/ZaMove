@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Admin dashboard | Zamove</title>
+        <link rel="stylesheet" href="css/style.css">
+        <link rel="stylesheet" href="css/utilities.css">
+    </head>
+<body data-p="admin" class="dash">
+
+    <aside class="side">
+        <div class="logo"><b>ZM</b>Admin</div>
+        <p class="u1">Platform admin</p>
+        <button data-tab="ap" aria-selected="true">Operator approvals</button>
+        <p><a href="index.html" class="u2">Back to site</a></p>
+    </aside>
+    <main id="main">
+        <h1 class="u3">Admin</h1>
+        <div data-panel="ap">
+            <p id="admMsg" class="mu" role="status" aria-live="polite"></p>
+            <div class="tw card" id="ops"></div>
+        </div>
+    </main>
+<script defer src="js/api.js"></script>
+<script defer src="js/guard.js" data-roles="admin"></script>
+<script defer src="js/safe.js"></script>
+<script defer src="js/app.js"></script>
+</body>
+</html>

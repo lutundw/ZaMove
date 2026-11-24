@@ -1,0 +1,25 @@
+/* Lab 6: the inline style="..." attributes of the pages, moved here so the CSP can forbid inline styles.
+   !important keeps the original precedence (inline styles used to beat every stylesheet rule). */
+.u1{color:#9cc5b4 !important}
+.u2{color:#fff !important}
+.u3{font-size:2rem !important}
+.u4{float:right !important}
+.u5{width:100% !important}
+.u6{max-width:760px !important}
+.u7{flex:1 !important}
+.u8{border:0 !important;padding:0 !important}
+.u9{color:var(--g) !important}
+.u10{color:#b42318 !important}
+.u11{margin-top:32px !important}
+.u12{max-width:480px !important}
+.u13{margin:4px 0 0 !important}
+.u14{height:45% !important}
+.u15{height:52% !important}
+.u16{height:48% !important}
+.u17{height:60% !important}
+.u18{height:75% !important}
+.u19{height:95% !important}
+.u20{height:70% !important}
+.u21{width:110px !important}
+.u22{font-size:1.8rem !important}
+.u23{text-align:center !important}

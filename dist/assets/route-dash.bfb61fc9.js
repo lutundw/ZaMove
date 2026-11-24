@@ -1,0 +1,2 @@
+export default function({$,$$,K,html,raw,put,S,TRIPS,TOWNS,opts}){const P={dash(){$$('.act').forEach(b=>b.onclick=()=>{const c=b.closest('tr').querySelector('.st');c.textContent=b.dataset.r;c.className='st chip '+(b.dataset.r=='Rejected'||b.dataset.r=='Suspended'?'r':'')})}
+};return P.dash;}

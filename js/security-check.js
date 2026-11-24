@@ -1,0 +1,49 @@
+/*
+ * Lab 5, Task 4.1 - what can an injected script see?
+ * Log in first, then open security-check.html. The four checks below are the same ones an
+ * attacker's XSS payload would try (read document.cookie, ask the Cookie Store API, look in
+ * web storage). The page then shows that the browser still sends the cookie by itself.
+ */
+(function () {
+  'use strict';
+  var NAME = '__Host-zamove_sid';
+  var out = function (id, text) { document.getElementById(id).textContent = text; };
+  var failures = [];
+
+  // 1. document.cookie
+  var dc = document.cookie;
+  out('r-cookie', 'document.cookie = ' + JSON.stringify(dc) + '\n' +
+      (dc.indexOf(NAME) === -1 ? 'RESULT: session cookie NOT visible to JavaScript' : 'RESULT: FAIL - cookie is readable'));
+  if (dc.indexOf(NAME) !== -1) failures.push('document.cookie');
+
+  // 2. Cookie Store API (Chromium) - HttpOnly cookies are excluded from it as well
+  var p2 = (window.cookieStore ? cookieStore.get(NAME) : Promise.resolve(undefined)).then(function (c) {
+    out('r-store', 'cookieStore.get("' + NAME + '") = ' + (c ? JSON.stringify(c) : 'null') + '\n' +
+        (c ? 'RESULT: FAIL - cookie is readable' : 'RESULT: session cookie NOT visible through the Cookie Store API'));
+    if (c) failures.push('cookieStore');
+  }, function (e) { out('r-store', 'cookieStore not available: ' + e.message + '\nRESULT: not applicable'); });
+
+  // 3. web storage
+  var hits = [];
+  [['localStorage', window.localStorage], ['sessionStorage', window.sessionStorage]].forEach(function (s) {
+    try { for (var i = 0; i < s[1].length; i++) { var k = s[1].key(i); if (/sid|session|token/i.test(k)) hits.push(s[0] + ':' + k); } } catch (e) {}
+  });
+  out('r-storage', 'keys that look like a session id: ' + (hits.length ? hits.join(', ') : 'none') + '\n' +
+      (hits.length ? 'RESULT: FAIL' : 'RESULT: nothing session-related is stored where scripts can read it'));
+  if (hits.length) failures.push('storage');
+
+  // 4. the browser attaches the cookie on its own
+  var p4 = fetch('api/v1/users/me', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    .then(function (r) { return r.json().then(function (j) { return [r.status, j]; }); })
+    .then(function (a) {
+      out('r-me', 'GET api/v1/users/me -> HTTP ' + a[0] + '\n' + JSON.stringify(a[1], null, 2) + '\n' +
+          (a[0] === 200 ? 'RESULT: session works, although JavaScript cannot read the cookie' : 'RESULT: not signed in - log in first'));
+    }, function (e) { out('r-me', 'request failed: ' + e.message); });
+
+  Promise.all([p2, p4]).then(function () {
+    var v = document.getElementById('verdict');
+    v.className = 'alert ' + (failures.length ? 'bad' : 'ok');
+    v.textContent = failures.length ? 'FAIL: readable through ' + failures.join(', ')
+                                    : 'PASS: an injected script cannot read the session cookie (HttpOnly).';
+  });
+})();

@@ -1,0 +1,45 @@
+# secrets and local configuration
+.env
+.env.*
+!.env.example
+zamove.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+rootCA*
+
+# runtime data and logs
+api/logs/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+tmp/
+
+# editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+node_modules/
+
+# Private certificates and keys
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+
+mkcert.exe
+trufflehog.exe
+xampp/
+*.bak

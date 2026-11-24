@@ -1,0 +1,29 @@
+== Benchmark: run | driver: mysql | rows: schedules 300000, bookings 500000 | runs per query: 30
+
+### Q1 schedule search (origin + destination + date window, soonest first)
+SELECT s.schedule_id, r.origin, r.destination, s.departure_at, s.fare_per_seat, s.seats_available FROM schedules s JOIN routes r ON r.route_id = s.route_id WHERE s.schedule_status = 'scheduled' AND s.departure_at >= ? AND s.departure_at < ? AND s.seats_available > 0 AND r.route_status = 'active' AND r.origin = ? AND r.destination = ? ORDER BY s.departure_at ASC, s.schedule_id ASC LIMIT 20
+  PLAN: {"id":1,"select_type":"SIMPLE","table":"r","type":"ref","possible_keys":"PRIMARY,idx_routes_search","key":"idx_routes_search","key_len":"965","ref":"const,const,const","rows":"4","Extra":"Using where; Using index; Using temporary; Using filesort"}
+  PLAN: {"id":1,"select_type":"SIMPLE","table":"s","type":"ref","possible_keys":"idx_schedules_route_departure,idx_schedules_search","key":"idx_schedules_search","key_len":"5","ref":"zamove_lab7.r.route_id,const","rows":"185","Extra":"Using index condition"}
+  TIME: median 31.444 ms | p95 66.886 ms | mean 34.937 ms | min 9.366 | max 89.170  (last run returned 20 rows)
+
+### Q2 my bookings (customer + status, newest first)
+SELECT booking_id, booking_reference, booking_status, total_amount, created_at FROM bookings WHERE customer_id = ? AND booking_status = ? ORDER BY created_at DESC, booking_id DESC LIMIT 20
+  PLAN: {"id":1,"select_type":"SIMPLE","table":"bookings","type":"ref","possible_keys":"idx_bookings_customer_status","key":"idx_bookings_customer_status","key_len":"5","ref":"const,const","rows":"24","Extra":"Using where"}
+  TIME: median 7.643 ms | p95 12.536 ms | mean 8.376 ms | min 5.661 | max 12.692  (last run returned 20 rows)
+
+### Q3 booking lookup by reference (UNIQUE key exists in both runs)
+SELECT booking_id, booking_status, total_amount FROM bookings WHERE booking_reference = ?
+  PLAN: {"id":1,"select_type":"SIMPLE","table":"bookings","type":"const","possible_keys":"uq_bookings_reference","key":"uq_bookings_reference","key_len":"122","ref":"const","rows":"1","Extra":""}
+  TIME: median 0.964 ms | p95 1.915 ms | mean 1.039 ms | min 0.525 | max 2.043  (last run returned 1 rows)
+
+### Q4 bookings of one departure, counted per status (FK schedule_id)
+SELECT booking_status, COUNT(*) AS n FROM bookings WHERE schedule_id = ? GROUP BY booking_status
+  PLAN: {"id":1,"select_type":"SIMPLE","table":"bookings","type":"ref","possible_keys":"idx_bookings_schedule_status","key":"idx_bookings_schedule_status","key_len":"5","ref":"const","rows":"3","Extra":"Using where; Using index"}
+  TIME: median 0.874 ms | p95 1.508 ms | mean 0.947 ms | min 0.594 | max 1.545  (last run returned 3 rows)
+
+### Q5 join: bookings per departure of one route (schedules -> bookings)
+SELECT s.schedule_id, s.departure_at, COUNT(b.booking_id) AS n FROM schedules s JOIN bookings b ON b.schedule_id = s.schedule_id WHERE s.route_id = ? GROUP BY s.schedule_id, s.departure_at ORDER BY s.departure_at LIMIT 20
+  PLAN: {"id":1,"select_type":"SIMPLE","table":"s","type":"ref","possible_keys":"PRIMARY,idx_schedules_route_departure,idx_schedules_search","key":"idx_schedules_route_departure","key_len":"4","ref":"const","rows":"786","Extra":"Using where; Using index; Using temporary; Using filesort"}
+  PLAN: {"id":1,"select_type":"SIMPLE","table":"b","type":"ref","possible_keys":"idx_bookings_schedule_status","key":"idx_bookings_schedule_status","key_len":"5","ref":"zamove_lab7.s.schedule_id","rows":"1","Extra":"Using index"}
+  TIME: median 194.124 ms | p95 218.089 ms | mean 189.464 ms | min 142.505 | max 220.159  (last run returned 20 rows)
+

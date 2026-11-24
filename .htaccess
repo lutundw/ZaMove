@@ -1,0 +1,83 @@
+# ZaMove root .htaccess (Lab 6). Needs mod_rewrite and mod_headers (both enabled in XAMPP).
+Options -Indexes
+
+RewriteEngine On
+
+# Every HTML page goes through page.php: per-response CSP nonce, security headers, server-side role checks.
+RewriteRule ^$ page.php [L]
+RewriteRule ^([a-z0-9-]+)\.html$ page.php [L]
+
+# Never serve configuration, source of the build, tests, logs or documentation to the web.
+RewriteRule ^(tests|tools|evidence|xampp)(/|$) - [F,L]
+RewriteRule (^|/)\.(env|git|gitignore)  - [F,L]
+RewriteRule \.(env|example|sql|md|log|yml|yaml|patch|bak)$ - [F,L]
+
+<IfModule mod_headers.c>
+    # Static files (css, js, images) do not go through PHP, so Apache adds the basics.
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set X-Frame-Options "DENY"
+    Header always unset X-Powered-By
+</IfModule>
+
+# ==================== LAB 9 (NEW): compression, caching, byte ranges ====================
+# Needs mod_deflate (and mod_brotli if your XAMPP has it), mod_expires-free: only mod_headers + mod_rewrite + mod_mime.
+# dist/*.html must never be fetched directly: they carry no CSP nonce. page.php serves them.
+RewriteRule ^dist/[A-Za-z0-9._-]+\.html$ - [F,L]
+
+# 1. Pre-compressed files made by `node tools/build.js` (assets/app.1a2b3c4d.js.br / .gz): send the smallest the browser accepts.
+RewriteCond %{HTTP:Accept-Encoding} br
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.br -f
+RewriteRule ^(dist/assets/.+\.(js|css))$ $1.br [L,E=ZM_ENC:br]
+RewriteCond %{HTTP:Accept-Encoding} gzip
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.gz -f
+RewriteRule ^(dist/assets/.+\.(js|css))$ $1.gz [L,E=ZM_ENC:gzip]
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.js\.br$">
+        ForceType application/javascript
+    </FilesMatch>
+    <FilesMatch "\.css\.br$">
+        ForceType text/css
+    </FilesMatch>
+    <FilesMatch "\.js\.gz$">
+        ForceType application/javascript
+    </FilesMatch>
+    <FilesMatch "\.css\.gz$">
+        ForceType text/css
+    </FilesMatch>
+    <FilesMatch "\.(js|css)\.(br|gz)$">
+        Header set Content-Encoding "expr=%{ENV:REDIRECT_ZM_ENC}"
+        Header append Vary Accept-Encoding
+    </FilesMatch>
+
+    # 2. Content-hashed build output: the name changes whenever the content changes, so cache it for a year and never revalidate.
+    <FilesMatch "\.[0-9a-f]{8}\.(js|css|avif|webp|png|jpg|woff2)(\.br|\.gz)?$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    # 3. Un-hashed images in img/: one day, then revalidate with ETag (304).
+    <FilesMatch "\.(png|jpg|jpeg|webp|avif|svg|ico)$">
+        Header setifempty Cache-Control "public, max-age=86400"
+    </FilesMatch>
+    # 4. Media: byte-range downloads so a player can seek and resume (Apache serves Accept-Ranges by default; stated explicitly).
+    <FilesMatch "\.(mp4|webm|mp3|m4a|ogg)$">
+        Header set Accept-Ranges "bytes"
+        Header setifempty Cache-Control "public, max-age=86400"
+    </FilesMatch>
+</IfModule>
+
+# 5. On-the-fly compression for everything that was not pre-compressed (HTML from page.php is compressed in PHP).
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/css application/javascript application/json image/svg+xml text/plain
+</IfModule>
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml text/plain
+</IfModule>
+<IfModule mod_mime.c>
+    AddType image/avif .avif
+    AddType image/webp .webp
+    AddType application/javascript .js
+</IfModule>
+FileETag MTime Size
+# ==================== end LAB 9 ====================

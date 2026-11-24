@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Operator dashboard | Zamove</title>
+<link rel="stylesheet" href="dist/assets/site.57028804.css">
+
+
+</head>
+<body data-p="operator" class="dash">
+<aside class="side">
+  <div class="logo"><b>ZM</b>Operator</div>
+  <p class="u1">Operator workspace</p>
+  <button data-tab="ov" aria-selected="true">Overview</button>
+  <button data-tab="ad" aria-selected="false">Add departure</button>
+  <button data-tab="fl" aria-selected="false">Fleet and routes</button>
+  <p><a href="index.html" class="u2">Back to site</a></p>
+</aside>
+<main id="main">
+  <h1 class="u3">Keep Zambia moving.</h1>
+
+  <div data-panel="ov">
+    <p class="mu">Times in Central Africa Time. This page updates live when a passenger books or pays.</p>
+    <div class="grid">
+      <div class="card"><span class="mu">Upcoming departures</span><div class="big" id="s-dep">-</div></div>
+      <div class="card"><span class="mu">Seats sold (paid)</span><div class="big" id="s-seats">-</div></div>
+      <div class="card"><span class="mu">Paid revenue</span><div class="big" id="s-rev">-</div></div>
+      <div class="card"><span class="mu">Awaiting payment</span><div class="big" id="s-pend">-</div></div>
+    </div>
+    <div class="tw card"><h3>Departures</h3><div id="deps"></div></div>
+    <div class="tw card"><h3>Latest bookings</h3><div id="bks"></div></div>
+  </div>
+
+  <div data-panel="ad" class="hid">
+    <form class="card" id="addTripForm" novalidate>
+      <h3>Add a departure</h3>
+      <p id="tripNeeds" class="alert bad hid" role="status"></p>
+      <label for="a-route">Route</label><select id="a-route" class="in" required></select>
+      <label for="a-veh">Vehicle</label><select id="a-veh" class="in" required></select>
+      <label for="a-dep">Departs (Zambia time)</label><input id="a-dep" class="in" type="datetime-local" required>
+      <label for="a-arr">Arrives (Zambia time)</label><input id="a-arr" class="in" type="datetime-local" required>
+      <label for="a-fare">Fare per seat (K)</label><input id="a-fare" class="in" type="number" min="1" step="1" required>
+      <label for="a-seats">Seats on sale</label><input id="a-seats" class="in" type="number" min="1" max="100" required>
+      <p><button class="btn" type="submit">Publish departure</button></p>
+      <p id="tripMsg" class="mu" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <div data-panel="fl" class="hid">
+    <div class="grid">
+      <form class="card" id="vehForm" novalidate>
+        <h3>Add a vehicle</h3>
+        <label for="v-reg">Registration number</label><input id="v-reg" class="in" maxlength="15" placeholder="ALX 1234" required>
+        <label for="v-type">Type</label><select id="v-type" class="in"><option>Standard</option><option>Executive</option><option>Luxury</option><option>Minibus</option></select>
+        <label for="v-seats">Seats</label><input id="v-seats" class="in" type="number" min="1" max="100" required>
+        <p><button class="btn" type="submit">Add vehicle</button></p>
+        <p id="vehMsg" class="mu" role="status" aria-live="polite"></p>
+      </form>
+      <form class="card" id="routeForm" novalidate>
+        <h3>Add a route</h3>
+        <label for="r-from">From</label><input id="r-from" class="in" maxlength="120" placeholder="Lusaka" required>
+        <label for="r-to">To</label><input id="r-to" class="in" maxlength="120" placeholder="Kitwe" required>
+        <label for="r-fare">Usual fare (K)</label><input id="r-fare" class="in" type="number" min="1" required>
+        <label for="r-km">Distance (km, optional)</label><input id="r-km" class="in" type="number" min="1">
+        <p><button class="btn" type="submit">Add route</button></p>
+        <p id="routeMsg" class="mu" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+    <div class="tw card"><h3>Your vehicles</h3><div id="vehs"></div></div>
+    <div class="tw card"><h3>Your routes</h3><div id="rts"></div></div>
+  </div>
+</main>
+<script defer src="dist/assets/api.8388987e.js"></script>
+<script defer src="dist/assets/guard.29ddd76c.js" data-roles="operator"></script>
+<script defer src="dist/assets/safe.6eed0ba8.js"></script><script defer src="dist/assets/app.fd296633.js"></script><script defer src="dist/assets/realtime.5c97efc6.js"></script>
+</body>
+</html>

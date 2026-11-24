@@ -1,0 +1,3 @@
+# Keep the log folder and anything else non-PHP in api/ away from the web.
+RewriteEngine On
+RewriteRule ^logs(/|$) - [F,L]
